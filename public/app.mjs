@@ -24,6 +24,7 @@ let voiceUI;
 let rewardUI;
 const castStage=setupCastStage();
 let responseEmotion='neutral';
+let previousVoicePhase='idle';
 let jobActionBusy = false;
 let canStart = false;
 let mediaAssets = [];
@@ -492,7 +493,7 @@ function bindEvents() {
 }
 async function boot() {
   rewardUI=setupRewardViewer({request:(path,body)=>mutation(path,body,path),onResult:acceptResult,onError:toast,onStart:async()=>{if(!session.user){openAuth();throw new Error('ログインすると視聴報酬を保存できます。');}stopRealtime();}});
-  voiceUI=setupVoiceConversation({session:()=>session,state:()=>state,cast:currentCast,request:body=>mutation('/chat',body,'voice'),onReply:async result=>{responseEmotion=result.emotion||'neutral';speakDialogue(result.reply,result.source);await acceptResult(result);},onStage:(phase,message,frame)=>{const scene=$('scene');scene.dataset.phase=phase;castStage.expression(phase==='speaking'?responseEmotion:'idle');if(['listening','thinking'].includes(phase)&&$('ai-dialog').open){$('ai-dialog').close();switchView('night');}},onError:message=>{set('ai-error',message);toast(message);}});
+  voiceUI=setupVoiceConversation({session:()=>session,state:()=>state,cast:currentCast,request:body=>mutation('/chat',body,'voice'),onReply:async result=>{responseEmotion=result.emotion||'neutral';speakDialogue(result.reply,result.source);await acceptResult(result);},onStage:(phase,message,frame)=>{const scene=$('scene');scene.dataset.phase=phase;castStage.expression(phase==='speaking'?responseEmotion:'idle');if(['listening','thinking'].includes(phase)&&$('ai-dialog').open){$('ai-dialog').close();switchView('night');}if(phase==='listening'&&previousVoicePhase==='idle'&&matchMedia('(max-width:700px)').matches)document.querySelector('.dialogue-card').scrollIntoView({block:'center',behavior:'smooth'});previousVoicePhase=phase;},onError:message=>{set('ai-error',message);toast(message);}});
   bindEvents();
   document.querySelector('.scene-caption').lastElementChild.textContent = 'AI生成の静止画 · 照明演出';
   const difficultyLabels = { easy: '3分 · 基本100G', normal: '4分 · 基本175G', hard: '5分 · 基本250G' };
