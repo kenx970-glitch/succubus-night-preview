@@ -5,7 +5,7 @@ export function setupVoiceConversation({session,state,cast,request,onReply,onSta
  let samples=[],started=0,lastLoud=0,speechStarted=false,frameTimer=null,lastResult=null,spokenEmotion='neutral',playEpoch=0;
  const price=()=>session().capabilities.voicePriceS||5;
  const canStart=()=>session().capabilities.ai&&$('voice-consent').checked&&(state()?.wallet?.S||0)>=price()&&!state()?.wallet?.debtS&&!running&&!processing;
- const stage=(name,message)=>{onStage(name,message);if(message)$('voice-status').textContent=message;$('mic-start').disabled=!canStart();$('mic-stop').hidden=!running&&!processing&&audio.paused;$('mic-input').hidden=!running;if(!running)$('mic-level').value=0;$('mic-send').hidden=!running;$('mic-send').disabled=!running||processing;};
+ const stage=(name,message)=>{onStage(name,message);if(message)$('voice-status').textContent=message;$('mic-start').disabled=!canStart();$('mic-stop').hidden=!running&&!processing&&audio.paused;$('mic-input').hidden=!running||processing;if(!running||processing)$('mic-level').value=0;$('mic-send').hidden=!running;$('mic-send').disabled=!running||processing;};
  function ensureBalance(){if((state()?.wallet?.S||0)<price()||state()?.wallet?.debtS>0)throw new Error(`音声の返答には${price()}Sが必要です。残高内で利用してください。無料の定型会話は続けられます。`);}
  async function context(){if(!ctx){ctx=new AudioContext();playerSource=ctx.createMediaElementSource(audio);analyser=ctx.createAnalyser();analyser.fftSize=256;playerSource.connect(analyser);analyser.connect(ctx.destination);}if(ctx.state!=='running')await ctx.resume();return ctx;}
  function setMicEnabled(value){mic?.getAudioTracks().forEach(t=>t.enabled=value);}
@@ -22,13 +22,14 @@ export function setupVoiceConversation({session,state,cast,request,onReply,onSta
  async function send(data){
   if(processing)throw new Error('返答の準備中です。');ensureBalance();const generation=playEpoch;processing=true;setMicEnabled(false);await context();
   stage('thinking',`${cast().name}がお返事を考えています…`);
+  const waitingSince=performance.now(),waitingTimer=setInterval(()=>{if(generation===playEpoch)$('voice-status').textContent=`音声の返答を作成中 · ${Math.floor((performance.now()-waitingSince)/1000)}秒経過 · 完了すると自動で再生します`;},1000);
   try{
-   const result=await request({...data,castId:cast().id,priceS:price()});lastResult=result;spokenEmotion=result.emotion||'neutral';
+   const result=await request({...data,castId:cast().id,priceS:price()});clearInterval(waitingTimer);lastResult=result;spokenEmotion=result.emotion||'neutral';
    await onReply(result);$('voice-replay').disabled=false;
    const url=new URL(result.audioUrl,location.origin);if(url.origin!==location.origin||!/^\/api\/voice\/[A-Za-z0-9_-]+\/audio$/.test(url.pathname))throw new Error('音声の取得先を確認できませんでした。');
    audio.src=url.href;if(generation===playEpoch){stage('speaking',`${cast().name}の返答 · ${result.priceS}S使用 · 聞き直しは追加消費なし`);await audio.play();}return result;
   }catch(e){stop();stage('idle',e.message+' 履歴で残高を確認できます。');onError(e.message);throw e;}
-  finally{processing=false;$('mic-start').disabled=!canStart();$('mic-send').disabled=!running;}
+  finally{clearInterval(waitingTimer);processing=false;$('mic-start').disabled=!canStart();$('mic-send').disabled=!running;}
  }
  async function finishUtterance(manual=false){
   if(!running||processing)return;
@@ -53,7 +54,7 @@ export function setupVoiceConversation({session,state,cast,request,onReply,onSta
   };
   running=true;audio.pause();listen();
  }
- function stop(){playEpoch++;running=false;setMicEnabled(false);processor?.disconnect();source?.disconnect();if(processor)processor.onaudioprocess=null;processor=null;source=null;mic?.getTracks().forEach(t=>t.stop());mic=null;samples=[];speechStarted=false;audio.pause();stage('idle','マイク停止 · 基本会話と物語は無料です。');}
+ function stop(){playEpoch++;running=false;setMicEnabled(false);processor?.disconnect();source?.disconnect();if(processor)processor.onaudioprocess=null;processor=null;source=null;mic?.getTracks().forEach(t=>t.stop());mic=null;samples=[];speechStarted=false;audio.pause();stage('idle',processing?'マイクを停止しました。送信済みの返答は処理中です。完了するとSを使用し、履歴に保存します。':'マイク停止 · 基本会話と物語は無料です。');}
  function animateMouth(){
   if(frameTimer)cancelAnimationFrame(frameTimer);if(audio.paused||audio.ended)return;
   if(analyser){const data=new Uint8Array(analyser.frequencyBinCount);analyser.getByteTimeDomainData(data);const energy=Math.sqrt(data.reduce((n,x)=>n+(x-128)*(x-128),0)/data.length);onStage('speaking',null,energy>4?'talking':spokenEmotion);}
