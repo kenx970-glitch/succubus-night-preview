@@ -1,0 +1,499 @@
+{
+  "generatedAt": "2026-10-09T05:29:53.522Z",
+  "models": {
+    "video": "fal-ai/kling-video/v3/pro/image-to-video",
+    "tts": "google/gemini-3.8-flash-tts"
+  },
+  "assets": [
+    {
+      "id": "welcome",
+      "kind": "video",
+      "url": "./media/welcome.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 11379957
+    },
+    {
+      "id": "luna-greeting",
+      "castId": "luna",
+      "kind": "audio",
+      "url": "./media/luna-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "bytes": 324834
+    },
+    {
+      "id": "mio-greeting",
+      "castId": "mio",
+      "kind": "audio",
+      "url": "./media/mio-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "bytes": 276834
+    },
+    {
+      "id": "reina-greeting",
+      "castId": "reina",
+      "kind": "audio",
+      "url": "./media/reina-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "bytes": 397794
+    },
+    {
+      "id": "luna-idle",
+      "castId": "luna",
+      "mood": "idle",
+      "kind": "video",
+      "url": "./media/luna-idle.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 13351165
+    },
+    {
+      "id": "luna-neutral",
+      "castId": "luna",
+      "mood": "neutral",
+      "kind": "video",
+      "url": "./media/luna-neutral.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 13881601
+    },
+    {
+      "id": "luna-happy",
+      "castId": "luna",
+      "mood": "happy",
+      "kind": "video",
+      "url": "./media/luna-happy.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 13893314
+    },
+    {
+      "id": "luna-sad",
+      "castId": "luna",
+      "mood": "sad",
+      "kind": "video",
+      "url": "./media/luna-sad.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 13565161
+    },
+    {
+      "id": "luna-angry",
+      "castId": "luna",
+      "mood": "angry",
+      "kind": "video",
+      "url": "./media/luna-angry.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3694832
+    },
+    {
+      "id": "luna-surprised",
+      "castId": "luna",
+      "mood": "surprised",
+      "kind": "video",
+      "url": "./media/luna-surprised.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3263226
+    },
+    {
+      "id": "mio-idle",
+      "castId": "mio",
+      "mood": "idle",
+      "kind": "video",
+      "url": "./media/mio-idle.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 14024486
+    },
+    {
+      "id": "mio-neutral",
+      "castId": "mio",
+      "mood": "neutral",
+      "kind": "video",
+      "url": "./media/mio-neutral.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 2902638
+    },
+    {
+      "id": "mio-happy",
+      "castId": "mio",
+      "mood": "happy",
+      "kind": "video",
+      "url": "./media/mio-happy.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 2611986
+    },
+    {
+      "id": "mio-sad",
+      "castId": "mio",
+      "mood": "sad",
+      "kind": "video",
+      "url": "./media/mio-sad.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3123206
+    },
+    {
+      "id": "mio-angry",
+      "castId": "mio",
+      "mood": "angry",
+      "kind": "video",
+      "url": "./media/mio-angry.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 12367899
+    },
+    {
+      "id": "mio-surprised",
+      "castId": "mio",
+      "mood": "surprised",
+      "kind": "video",
+      "url": "./media/mio-surprised.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 2872447
+    },
+    {
+      "id": "reina-idle",
+      "castId": "reina",
+      "mood": "idle",
+      "kind": "video",
+      "url": "./media/reina-idle.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 2466071
+    },
+    {
+      "id": "reina-neutral",
+      "castId": "reina",
+      "mood": "neutral",
+      "kind": "video",
+      "url": "./media/reina-neutral.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3276676
+    },
+    {
+      "id": "reina-happy",
+      "castId": "reina",
+      "mood": "happy",
+      "kind": "video",
+      "url": "./media/reina-happy.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 13035406
+    },
+    {
+      "id": "reina-sad",
+      "castId": "reina",
+      "mood": "sad",
+      "kind": "video",
+      "url": "./media/reina-sad.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3258716
+    },
+    {
+      "id": "reina-angry",
+      "castId": "reina",
+      "mood": "angry",
+      "kind": "video",
+      "url": "./media/reina-angry.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 12977361
+    },
+    {
+      "id": "reina-surprised",
+      "castId": "reina",
+      "mood": "surprised",
+      "kind": "video",
+      "url": "./media/reina-surprised.mp4",
+      "model": "fal-ai/kling-video/v3/pro/image-to-video",
+      "bytes": 3146227
+    },
+    {
+      "id": "luna-casual-v2-greeting",
+      "castId": "luna",
+      "lineId": "greeting",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 284514
+    },
+    {
+      "id": "luna-casual-v2-topic-day",
+      "castId": "luna",
+      "lineId": "topic-day",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-topic-day.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 269154
+    },
+    {
+      "id": "luna-casual-v2-topic-music",
+      "castId": "luna",
+      "lineId": "topic-music",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-topic-music.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 301794
+    },
+    {
+      "id": "luna-casual-v2-topic-dream",
+      "castId": "luna",
+      "lineId": "topic-dream",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-topic-dream.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 274914
+    },
+    {
+      "id": "luna-casual-v2-topic-memory",
+      "castId": "luna",
+      "lineId": "topic-memory",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-topic-memory.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 307554
+    },
+    {
+      "id": "luna-casual-v2-order-drink",
+      "castId": "luna",
+      "lineId": "order-drink",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-order-drink.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 261474
+    },
+    {
+      "id": "luna-casual-v2-order-luxury",
+      "castId": "luna",
+      "lineId": "order-luxury",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-order-luxury.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 332514
+    },
+    {
+      "id": "luna-casual-v2-order-champagne",
+      "castId": "luna",
+      "lineId": "order-champagne",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-order-champagne.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 403554
+    },
+    {
+      "id": "luna-casual-v2-order-premium-revision-505ca18a",
+      "castId": "luna",
+      "lineId": "order-premium",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/luna-casual-v2-order-premium-revision-505ca18a.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Aoede",
+      "bytes": 630114
+    },
+    {
+      "id": "mio-casual-v2-greeting",
+      "castId": "mio",
+      "lineId": "greeting",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 251874
+    },
+    {
+      "id": "mio-casual-v2-topic-day",
+      "castId": "mio",
+      "lineId": "topic-day",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-topic-day.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 280674
+    },
+    {
+      "id": "mio-casual-v2-topic-music",
+      "castId": "mio",
+      "lineId": "topic-music",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-topic-music.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 347874
+    },
+    {
+      "id": "mio-casual-v2-topic-dream",
+      "castId": "mio",
+      "lineId": "topic-dream",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-topic-dream.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 255714
+    },
+    {
+      "id": "mio-casual-v2-topic-memory",
+      "castId": "mio",
+      "lineId": "topic-memory",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-topic-memory.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 309474
+    },
+    {
+      "id": "mio-casual-v2-order-drink",
+      "castId": "mio",
+      "lineId": "order-drink",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-order-drink.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 201954
+    },
+    {
+      "id": "mio-casual-v2-order-luxury",
+      "castId": "mio",
+      "lineId": "order-luxury",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-order-luxury.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 320994
+    },
+    {
+      "id": "mio-casual-v2-order-champagne",
+      "castId": "mio",
+      "lineId": "order-champagne",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-order-champagne.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 278754
+    },
+    {
+      "id": "mio-casual-v2-order-premium",
+      "castId": "mio",
+      "lineId": "order-premium",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/mio-casual-v2-order-premium.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Zephyr",
+      "bytes": 574434
+    },
+    {
+      "id": "reina-casual-v2-greeting",
+      "castId": "reina",
+      "lineId": "greeting",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-greeting.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 332514
+    },
+    {
+      "id": "reina-casual-v2-topic-day",
+      "castId": "reina",
+      "lineId": "topic-day",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-topic-day.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 263394
+    },
+    {
+      "id": "reina-casual-v2-topic-music",
+      "castId": "reina",
+      "lineId": "topic-music",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-topic-music.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 342114
+    },
+    {
+      "id": "reina-casual-v2-topic-dream",
+      "castId": "reina",
+      "lineId": "topic-dream",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-topic-dream.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 299874
+    },
+    {
+      "id": "reina-casual-v2-topic-memory",
+      "castId": "reina",
+      "lineId": "topic-memory",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-topic-memory.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 292194
+    },
+    {
+      "id": "reina-casual-v2-order-drink",
+      "castId": "reina",
+      "lineId": "order-drink",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-order-drink.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 198114
+    },
+    {
+      "id": "reina-casual-v2-order-luxury",
+      "castId": "reina",
+      "lineId": "order-luxury",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-order-luxury.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 363234
+    },
+    {
+      "id": "reina-casual-v2-order-champagne",
+      "castId": "reina",
+      "lineId": "order-champagne",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-order-champagne.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 317154
+    },
+    {
+      "id": "reina-casual-v2-order-premium-revision-2daca0ea",
+      "castId": "reina",
+      "lineId": "order-premium",
+      "variant": "casual-v2",
+      "kind": "audio",
+      "url": "./media/reina-casual-v2-order-premium-revision-2daca0ea.wav",
+      "model": "google/gemini-3.8-flash-tts",
+      "voice": "Leda",
+      "bytes": 708834
+    }
+  ]
+}
