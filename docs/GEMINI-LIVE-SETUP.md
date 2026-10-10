@@ -1,6 +1,6 @@
 # Gemini Live の設定
 
-更新日：2026-10-10。自由会話の標準方式は Google に直接接続する `gemini-3.8-live`。Falのキーとは別のキーを使用する。まだGoogleの実接続・声の試聴・速度計測は完了していない。
+更新日：2026-10-10。自由会話の標準方式は Google に直接接続する `gemini-3.8-live`。Falのキーとは別のキーを使用する。2026-10-10にGoogleへの実接続を確認。テキスト入力と生成済み音声の16kHz PCM入力から、音声ストリーミング・文字起こし・24kHz WAV保存・隔離DBで20S→15Sを検証した。最初の返答音声はテキスト入力868ms、録音音声入力819ms（各1回の短い試験）。実マイク入力と声の好みは利用者の端末で確認する。[接続検証](GEMINI-LIVE-VERIFICATION.md)。
 
 ## 1. Google のキーを取得する
 
@@ -45,6 +45,8 @@ npm start
 18歳以上・料金と送信先を確認し、マイクを開始。ブラウザのマイク許可は利用者が操作する。声を検出するとSを予約し、約800msの無音または「話し終えた」で返答を開始。音声チャンクを届いた順に再生する。完成した返答は5S、未完了は返却、聞き直しは追加消費なし。
 
 ## 4. 無料枠と費用
+
+ゲームのS残高とGoogleのAPI料金は別管理。現在の2,000Sはテスト用の付与で、Stripeは未接続。テスト用Sを増やしてもGoogle側の費用が無料になるわけではない。GoogleのAPIキーは対象プロジェクトの課金状態を引き継ぐため、AI StudioのAPI KeysでBilling Tier / Planを確認する。Free Tierは無料枠内で利用、Paidは運営者のGoogleプロジェクトで料金が発生する。ローカルで接続できたことだけでは無料・有料や請求額を判定できない。[課金状態の公式説明](https://ai.google.dev/gemini-api/docs/billing)。
 
 Gemini Liveには無料枠が掲載されているが、利用量・モデル・アカウントの枠に制約がある。料金や割当はGoogleの[料金表](https://ai.google.dev/gemini-api/docs/pricing)と[Billing](https://ai.google.dev/gemini-api/docs/billing)で確認する。有料枠を使う場合は対象プロジェクトの課金設定が必要。Googleの有料枠への変更は運営者が行う。
 
