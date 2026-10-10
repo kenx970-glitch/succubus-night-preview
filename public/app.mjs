@@ -181,7 +181,7 @@ function speakDialogue(reply, source = 'scripted', replyId = null) {
   $('voice-replay').disabled=true;
 
   set('dialogue-text', `「${reply}」`);
-  set('dialogue-source', source === 'fal-gemini' ? 'GEMINI 3.8 FLASH · AI会話' : source === 'safety' ? '安心して楽しめる話題へ' : 'SCRIPTED · 定型会話');
+  set('dialogue-source', source === 'gemini-live' ? 'GEMINI LIVE · 音声会話' : source === 'fal-gemini' ? 'GEMINI 3.8 FLASH · AI会話' : source === 'safety' ? '安心して楽しめる話題へ' : 'SCRIPTED · 定型会話');
 
 }
 async function playScripted(lineId,castId,emotion='happy'){
@@ -230,9 +230,11 @@ function renderState() {
   renderJob();
   $('job-start').disabled = !canStart;
   set('stripe-status', session.capabilities?.stripe ? 'Stripeテスト決済に接続済みです。カード情報はStripe上で入力します。' : 'Stripeテスト用キーが未設定です。Sの購入は現在利用できません。設定後にテスト決済を検証できます。');
-  set('ai-status', session.capabilities?.ai ? (session.capabilities.aiProvider==='fal-gemini'?`Gemini音声に接続済み · 残高 ${number(state?.wallet?.S)}S。表示料金を確認して開始してください。`:'Gemini音声を設定してください。') : 'AI会話キーが未設定です。無料の定型会話と生成済みの挨拶音声を利用できます。');
+  const liveSelected=session.capabilities?.aiProvider==='gemini-live';
+  set('ai-status',session.capabilities?.ai?`${liveSelected?'Gemini Live':'Gemini音声'}の設定済み · 残高 ${number(state?.wallet?.S)}S`:'Gemini Liveのキー設定待ち · 無料の会話と生成済み音声は利用できます。');
+  set('voice-destination',liveSelected?'表示料金を確認し、音声・会話・表示名・直近履歴がGoogleのGeminiへ送信されることに同意します。':'表示料金を確認し、音声・会話がFal経由の音声認識・Geminiへ送信されることに同意します。');
   $('chat-submit').disabled = !session.capabilities?.ai;
-  const price=session.capabilities?.voicePriceS||5;set('voice-price',`返答1回 ${price}S`);$('mic-start').disabled=!session.capabilities?.ai||!$('voice-consent').checked||(wallet?.S||0)<price||wallet?.debtS>0||Boolean(voiceUI?.processing)||Boolean(voiceUI?.active);
+  const price=session.capabilities?.voicePriceS||5;set('voice-price',`返答1回 ${price}S`);$('mic-start').disabled=!session.capabilities?.ai||!$('voice-consent').checked||!$('adult-consent').checked||(wallet?.S||0)<price||wallet?.debtS>0||Boolean(voiceUI?.processing)||Boolean(voiceUI?.active);
   $('chat-submit').textContent=`${price}Sで送信・音声の返答`;
   if(!voiceUI?.processing&&$('cached-audio').paused&&!$('scene').dataset.phase)set('voice-status',`音声会話は返答1回${price}S · 基本会話は無料`);
 }
@@ -483,8 +485,8 @@ function bindEvents() {
   $('pack-confirm').addEventListener('click', startCheckout); $('job-start').addEventListener('click', startJob); $('job-finish').addEventListener('click', finishJob);
   $('logout').addEventListener('click', () => busy($('logout'), async () => { stopRealtime();  await api('/auth/logout', {}); session = await api('/session'); state = null; job = null; $('auth-dialog').close(); renderCatalog(); renderState(); toast('ログアウトしました。'); }));
   $('limit-form').addEventListener('submit', event => { event.preventDefault(); if (!requireAuth()) return; const button = event.currentTarget.querySelector('button'); busy(button, async () => { const result = await mutation('/limit', { yen: Number($('limit-yen').value) }, 'limit'); await acceptResult(result); toast('今月の支出上限を保存しました。'); }); });
-  $('voice-consent').addEventListener('change',renderState);
-  for(const id of ['chat-open'])$(id).addEventListener('click', () => { if (!requireAuth()) return; set('ai-error', '');if($('voice-consent').checked&&state.wallet.S>=(session.capabilities.voicePriceS||5)){voiceUI.start().catch(e=>toast(e.message));return;}stopRealtime();renderState();openDialog('ai-dialog'); });
+  $('voice-consent').addEventListener('change',renderState);$('adult-consent').addEventListener('change',renderState);
+  for(const id of ['chat-open'])$(id).addEventListener('click', () => { if (!requireAuth()) return; set('ai-error', '');if(session.capabilities.ai&&$('voice-consent').checked&&$('adult-consent').checked&&state.wallet.S>=(session.capabilities.voicePriceS||5)){voiceUI.start().catch(e=>toast(e.message));return;}stopRealtime();renderState();openDialog('ai-dialog'); });
   $('chat-form').addEventListener('submit', aiChat);
   window.addEventListener('pagehide', stopRealtime);
   setInterval(updateJobClock, 1000);
@@ -493,7 +495,7 @@ function bindEvents() {
 }
 async function boot() {
   rewardUI=setupRewardViewer({request:(path,body)=>mutation(path,body,path),onResult:acceptResult,onError:toast,onStart:async()=>{if(!session.user){openAuth();throw new Error('ログインすると視聴報酬を保存できます。');}stopRealtime();}});
-  voiceUI=setupVoiceConversation({session:()=>session,state:()=>state,cast:currentCast,request:body=>mutation('/chat',body,'voice'),onReply:async result=>{responseEmotion=result.emotion||'neutral';speakDialogue(result.reply,result.source);await acceptResult(result);},onStage:(phase,message,frame)=>{const scene=$('scene');scene.dataset.phase=phase;castStage.expression(phase==='speaking'?responseEmotion:'idle');if(['listening','thinking'].includes(phase)&&$('ai-dialog').open){$('ai-dialog').close();switchView('night');}if(phase==='listening'&&previousVoicePhase==='idle'&&matchMedia('(max-width:700px)').matches)document.querySelector('.dialogue-card').scrollIntoView({block:'center',behavior:'smooth'});previousVoicePhase=phase;},onError:message=>{set('ai-error',message);toast(message);}});
+  voiceUI=setupVoiceConversation({session:()=>session,state:()=>state,cast:currentCast,request:body=>mutation('/chat',body,'voice'),requestSession:body=>api('/live/session',body),onReply:async result=>{if(result.reply){responseEmotion=result.emotion||'neutral';speakDialogue(result.reply,result.source);}await acceptResult(result);},onPartial:(text,emotion)=>{responseEmotion=emotion||'neutral';speakDialogue(text,'gemini-live');castStage.expression(responseEmotion);},onStage:(phase,message,frame)=>{const scene=$('scene');scene.dataset.phase=phase;castStage.expression(phase==='speaking'?responseEmotion:'idle');if(['listening','thinking'].includes(phase)&&$('ai-dialog').open){$('ai-dialog').close();switchView('night');}if(phase==='listening'&&previousVoicePhase==='idle'&&matchMedia('(max-width:700px)').matches)document.querySelector('.dialogue-card').scrollIntoView({block:'center',behavior:'smooth'});previousVoicePhase=phase;},onError:message=>{set('ai-error',message);toast(message);}});
   bindEvents();
   document.querySelector('.scene-caption').lastElementChild.textContent = 'AI生成の静止画 · 照明演出';
   const difficultyLabels = { easy: '3分 · 基本100G', normal: '4分 · 基本175G', hard: '5分 · 基本250G' };

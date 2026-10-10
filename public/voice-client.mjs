@@ -1,5 +1,18 @@
 import {rmsOf,chunksRms,inputGain,voiceDetected} from './voice-input.mjs';
-export function setupVoiceConversation({session,state,cast,request,onReply,onStage,onError}){
+import {setupGeminiLive} from './gemini-live-client.mjs';
+export function setupVoiceConversation(options){
+ let lastResult=null;const onReply=async result=>{if(result.reply)lastResult=result;await options.onReply(result);};
+ const batch=setupBatchVoiceConversation({...options,onReply,bindControls:false});
+ const live=setupGeminiLive({...options,onReply});
+ const selected=()=>options.session().capabilities.aiProvider==='gemini-live'?live:batch;
+ const $=id=>document.getElementById(id);
+ const stop=()=>{live.stop();batch.stop();};
+ $('mic-start').addEventListener('click',()=>selected().start().catch(e=>options.onError(e.message)));
+ $('mic-stop').addEventListener('click',stop);$('mic-send').addEventListener('click',()=>{try{selected().finish();}catch(e){options.onError(e.message);}});
+ $('voice-replay').addEventListener('click',()=>{if(lastResult){live.stop();batch.replay(lastResult).catch(()=>options.onError('音声を再生できませんでした。'));}});
+ return {start:()=>selected().start(),stop,clearReplay(){lastResult=null;live.stop();batch.clearReplay();},textTurn:text=>selected().textTurn(text),replay:async result=>{live.stop();lastResult=result;return batch.replay(result);},get active(){return live.active||batch.active;},get processing(){return live.processing||batch.processing;}};
+}
+function setupBatchVoiceConversation({session,state,cast,request,onReply,onStage,onError,bindControls=true}){
  const $=id=>document.getElementById(id),audio=$('cached-audio');
  let running=false,processing=false,mic=null,ctx=null,source=null,processor=null,analyser=null,playerSource=null;
  let samples=[],started=0,lastLoud=0,speechStarted=false,frameTimer=null,lastResult=null,spokenEmotion='neutral',playEpoch=0;
@@ -63,8 +76,8 @@ export function setupVoiceConversation({session,state,cast,request,onReply,onSta
  audio.addEventListener('play',()=>{spokenEmotion=lastResult?.emotion||'happy';stage('speaking',lastResult?.priceS?`Geminiの返答 · ${lastResult.priceS}Sで作成済み · 再生の追加消費なし`:'Gemini音声を再生中 · Sの消費なし。');animateMouth();});
  audio.addEventListener('ended',()=>{onStage('idle',null,spokenEmotion);if(running)listen();else stage('idle','返答が終わりました。聞き直しは追加消費なし。');});
  audio.addEventListener('pause',()=>{if(frameTimer)cancelAnimationFrame(frameTimer);onStage('idle',null,spokenEmotion);});
- $('mic-start').addEventListener('click',()=>start().catch(e=>onError(e.message)));$('mic-stop').addEventListener('click',stop);$('mic-send').addEventListener('click',()=>finishUtterance(true));
- $('voice-replay').addEventListener('click',async()=>{try{await context();audio.currentTime=0;await audio.play();}catch(e){onError('音声を再生できませんでした。');}});
+ if(bindControls){$('mic-start').addEventListener('click',()=>start().catch(e=>onError(e.message)));$('mic-stop').addEventListener('click',stop);$('mic-send').addEventListener('click',()=>finishUtterance(true));
+ $('voice-replay').addEventListener('click',async()=>{try{await context();audio.currentTime=0;await audio.play();}catch(e){onError('音声を再生できませんでした。');}});}
  window.addEventListener('pagehide',stop);
- return {stop,clearReplay(){stop();lastResult=null;audio.removeAttribute("src");audio.load();$("voice-replay").disabled=true;},textTurn:async text=>{await context();return send({text});},async replay(result){stop();await context();lastResult=result;spokenEmotion=result.emotion||'neutral';audio.src=result.audioUrl;await audio.play();$('voice-replay').disabled=false;},start,get processing(){return processing;},get active(){return running;}};
+ return {stop,finish:()=>finishUtterance(true),clearReplay(){stop();lastResult=null;audio.removeAttribute("src");audio.load();$("voice-replay").disabled=true;},textTurn:async text=>{await context();return send({text});},async replay(result){stop();await context();lastResult=result;spokenEmotion=result.emotion||'neutral';audio.src=result.audioUrl;await audio.play();$('voice-replay').disabled=false;},start,get processing(){return processing;},get active(){return running;}};
 }

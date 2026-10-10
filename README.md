@@ -15,14 +15,16 @@
 
 ## ローカルのサーバー版
 
-Node.js 24以上で `npm start` を実行し、http://127.0.0.1:3210/ を開きます。
+Node.js 24以上で初回は `npm ci`、次に `npm start` を実行し、http://127.0.0.1:3210/ を開きます。
 
-- `.env.example` を参考にローカルの `.env` にFAL_KEYを設定
-- 音声認識→Gemini返答→Gemini TTS、完成返答1回5S、失敗時返却、二重消費防止
+- [Gemini Liveの設定手順](docs/GEMINI-LIVE-SETUP.md)。`.env.example` を `.env` にコピーして `GEMINI_API_KEY` を設定。キーは公開しない。
+- 標準は `gemini-3.8-live` の認証付きサーバー中継。Googleのキー設定・実接続・試聴はまだ待機中。FAL_KEYへの自動切替はしない。
+- 音声の入力・返答をストリーミング。完成返答1回5S、未完了時返却、二重消費防止。入力30秒・返答20秒・接続4分で制限。
+- ローカルの上限：同時2接続、日本時間1日全体100回 / 個人60回の開始済み発言。ドルの厳密な請求上限ではない。
 - 料金・外部送信先を確認してマイク開始、入力メーター、手動送信
 - テスト残高補充は `node scripts/fund-local-test.mjs --all-local-accounts`（既存ローカルアカウントのみ）
 - Stripeは `sk_test_` とWebhook接続待ち。本番キー・本番イベントを拒否
-- `npm test` / `npm run check` で検証
+- `npm test` / `npm run check` で検証。69件成功（Gemini Liveは外部サービスを代替した14件を含む）。実Google試験の成功を意味しない。
 
 mainブランチの `site/` が共有デモ、gh-pagesブランチが配信用です。サーバー版のソースは `src/`、画面は `public/`。
 
@@ -30,7 +32,7 @@ mainブランチの `site/` が共有デモ、gh-pagesブランチが配信用�
 
 [構成](docs/ARCHITECTURE.md)、[スマホ改善](docs/MOBILE-REVIEW.md)、[公開前確認](docs/RELEASE.md) を参照。Stripe実接続試験、事業者ポリシー確認、日本での法的整理、クラウド・永続DB・費用制限・本物の広告検証は別途必要です。本番決済、実際の請求は所有者の明示承認が必要です。
 
-Gemini Liveなどの低遅延会話は未接続。現在の録音音声は再生時にAI APIを呼びません。
+Gemini Liveのコードはローカル用に実装済み。公開Pagesには自由会話を接続していません。Googleのキー・実接続検証・HTTPSで常時稼働するバックエンドが必要です。現在の録音音声は再生時にAI APIを呼びません。
 
 ## 素材
 

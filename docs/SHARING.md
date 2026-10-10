@@ -1,6 +1,6 @@
 # 共有ページ
 
-更新日：2026-10-09。ユーザーからGitHubで見せられるURLの公開を依頼されて公開。
+更新日：2026-10-10。ユーザーからGitHubで見せられるURLの公開を依頼されて公開。
 
 - [共有プレビュー](https://kenx970-glitch.github.io/succubus-night-preview/)
 - [GitHubリポジトリ](https://github.com/kenx970-glitch/succubus-night-preview)
@@ -17,7 +17,7 @@ GitHub Pagesの公開ビルド成功・HTTP 200を確認。公開URLのブラウ
 
 公開ページにはマイク会話・新規AI生成・ログイン・実決済・広告収益を接続していない。GitHub Pagesは静的配信のためNodeサーバーを実行できない。PCを停止しても共有ページは利用できる。
 
-ローカルの `http://127.0.0.1:3210/` ではFal経由の音声認識→Gemini返答→Gemini TTSが動く。ここはPCとNodeサーバーに依存する。外部で自由会話も動かすには、クラウドサーバー・永続DB・HTTPS・費用上限・APIキーの保管が必要。
+ローカルの `http://127.0.0.1:3210/` はGemini Liveを標準として実装済み。GoogleのAPIキー設定・実接続検証は待機中。旧Fal方式は明示選択の場合に使用する。ここはPCとNodeサーバーに依存する。外部で自由会話も動かすには、クラウドサーバー・永続DB・HTTPS・費用上限・APIキーの保管が必要。
 
 APIキー・ローカルDB・個人アカウント・購入履歴・会話音声は公開していない。公開用manifestからFalの生成リクエストIDを除去。ローカルの試験JSONは公開ソースへ含めていない。
 

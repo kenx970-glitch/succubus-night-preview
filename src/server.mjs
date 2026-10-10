@@ -10,6 +10,7 @@ import {StripeTest,PaymentError,verifyWebhook} from './stripe.mjs';
 import {CastAI} from './ai.mjs';
 import {RewardedViews} from './rewarded-views.mjs';
 import {VoiceTurns,validateMicAudio} from './voice-turns.mjs';
+import {GeminiLive} from './gemini-live.mjs';
 import {PACKS,ITEMS,CASTS,TOPICS,STORY_EVENTS,FICTION_NOTICE,orderLine} from './catalog.mjs';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -41,6 +42,10 @@ export function createApp(options={}){
  function rate(key,max,windowMs){const now=Date.now();let bucket=limits.get(key);if(!bucket||bucket.until<now){bucket={count:0,until:now+windowMs};limits.set(key,bucket);}if(++bucket.count>max)deny(429,'RATE_LIMIT','操作が続いています。少し待ってから再試行してください。');if(limits.size>5000){for(const[k,v]of limits)if(v.until<now)limits.delete(k);}}
  function apiUsage(userId,kind,max){const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);auth.db.prepare('INSERT INTO ai_usage VALUES(?,?,?,0) ON CONFLICT DO NOTHING').run(userId,day,kind);const r=auth.db.prepare('UPDATE ai_usage SET count=count+1 WHERE user_id=? AND day=? AND kind=? AND count<?').run(userId,day,kind,max);if(!r.changes)deny(429,'AI_DAILY_LIMIT','本日のAIサービス利用上限に達しました。定型会話は続けられます。');}
  const state=user=>({...economy.state(user.id),voiceTurns:voice.history(user.id)});
+ const voiceBackend=options.voiceBackend||(options.ai?'fal-gemini':process.env.VOICE_BACKEND||'gemini-live');
+ if(!['gemini-live','fal-gemini'].includes(voiceBackend))throw new Error('VOICE_BACKEND must be gemini-live or fal-gemini.');
+ const live=new GeminiLive({economy,voice,auth,ai,state,rate,origin:()=>origin,apiKey:process.env.GEMINI_API_KEY||process.env.GOOGLE_API_KEY||'',model:process.env.GEMINI_LIVE_MODEL||'gemini-3.8-live',maxSessions:Number(process.env.LIVE_MAX_SESSIONS||2),dailyMaxTurns:Number(process.env.LIVE_DAILY_MAX_TURNS||100),userDailyMaxTurns:Number(process.env.LIVE_USER_DAILY_MAX_TURNS||60),...options.live});
+ const voiceConfigured=()=>voiceBackend==='gemini-live'?live.configured:!!ai.falKey;
  function payloadKey(body){if(typeof body.key!=='string'||!/^[A-Za-z0-9_-]{8,120}$/.test(body.key))deny(400,'INVALID_KEY','操作番号が不正です。');return body.key;}
  async function ensureCheckout(p){
   if(p.sessionId)return stripe.session(p.sessionId);
@@ -127,7 +132,7 @@ export function createApp(options={}){
   const token=cookieToken(req);let session=auth.session(token);
   if(req.method==='GET'&&url.pathname==='/api/session'){
    if(!session){const next=auth.createSession();res.setHeader('Set-Cookie',cookie(next.token,origin.startsWith('https:')));session=auth.session(next.token);}
-   return send(res,200,{user:session.id?{id:session.id,name:session.name}:null,csrfToken:session.csrf,capabilities:{stripe:stripe.configured,ai:!!ai.falKey,aiProvider:'fal-gemini',tts:!!ai.falKey,realtime:false,voicePriceS:voice.priceS,mode:'test'},fictionNotice:FICTION_NOTICE});
+   return send(res,200,{user:session.id?{id:session.id,name:session.name}:null,csrfToken:session.csrf,capabilities:{stripe:stripe.configured,ai:voiceConfigured(),aiProvider:voiceBackend,tts:voiceConfigured(),realtime:voiceBackend==='gemini-live'&&live.configured,live:live.config(),voicePriceS:voice.priceS,mode:'test'},fictionNotice:FICTION_NOTICE});
   }
   if(req.method==='GET'&&url.pathname==='/api/catalog')return send(res,200,{packs:PACKS,items:ITEMS,casts:CASTS,topics:TOPICS,events:STORY_EVENTS,rewardedViews:rewards.config(),conversation:{voicePriceS:voice.priceS,includes:['音声認識','AI返答','Gemini日本語音声'],maxInputSeconds:30}});
   if(req.method==='GET'&&url.pathname==='/api/media'){
@@ -155,7 +160,11 @@ export function createApp(options={}){
   const user={id:session.id,name:session.name};economy.ensureAccount(user.id);
   rate('api:'+user.id,240,60000);
   if(req.method==='GET'&&url.pathname==='/api/state')return send(res,200,state(user));
-  if(req.method==='POST'&&url.pathname==='/api/auth/logout'){auth.revoke(token);res.setHeader('Set-Cookie','sn_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');return send(res,200,{ok:true});}
+  if(req.method==='POST'&&url.pathname==='/api/auth/logout'){live.stop(user.id);auth.revoke(token);res.setHeader('Set-Cookie','sn_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');return send(res,200,{ok:true});}
+  if(req.method==='POST'&&url.pathname==='/api/live/session'){
+   payloadKey(body);if(voiceBackend!=='gemini-live')deny(503,'LIVE_NOT_SELECTED','音声方式をGemini Liveに設定してください。');
+   return send(res,200,live.issue(user,body));
+  }
   if(req.method==='POST'&&url.pathname==='/api/limit')return send(res,200,{monthly:economy.setLimit(user.id,body.yen),state:state(user)});
   if(req.method==='POST'&&url.pathname==='/api/order'){payloadKey(body);return send(res,200,{order:economy.order(user.id,body),reply:orderLine(body.castId,body.itemId),state:state(user)});}
   if(req.method==='POST'&&url.pathname==='/api/visit'){payloadKey(body);return send(res,200,{progress:economy.visit(user.id,body.castId,body.key),state:state(user)});}
@@ -195,6 +204,8 @@ export function createApp(options={}){
   }
   if(req.method==='POST'&&url.pathname==='/api/chat'){
    const key=payloadKey(body);
+   if(voiceBackend==='gemini-live')deny(503,'USE_GEMINI_LIVE','Gemini Liveの音声会話から開始してください。');
+   if(live.busy(user.id))deny(409,'LIVE_TURN_BUSY','音声の返答が終わってから再開してください。');
    if(!ai.falKey)deny(503,'AI_NOT_CONFIGURED','Gemini音声の接続が未設定です。無料の定型会話は利用できます。');
    if(body.priceS!==voice.priceS)deny(409,'PRICE_CHANGED','現在の会話料金を確認してから開始してください。');
    const isAudio=body.audioDataURI!==undefined;
@@ -241,13 +252,14 @@ export function createApp(options={}){
  const server=http.createServer(async(req,res)=>{
   try{
    res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');res.setHeader('Cache-Control','no-store');
-   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+   res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ${new URL(origin).origin.replace(/^http/,'ws')}; media-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
    res.setHeader('Permissions-Policy','camera=(), microphone=(self)');
    if(req.headers.host!==new URL(origin).host)deny(403,'HOST_REJECTED','このホストから接続してください。');
    const url=new URL(req.url,origin);
    if(url.pathname.startsWith('/api/'))return await routes(req,res,url);
    if(req.method!=='GET'&&req.method!=='HEAD')deny(405,'METHOD_NOT_ALLOWED','操作が不正です。');
    const assets={'/voice-input.mjs':'voice-input.mjs','/mobile.css':'mobile.css','/reward-viewer.mjs':'reward-viewer.mjs','/voice-client.mjs':'voice-client.mjs','/cast-stage.mjs':'cast-stage.mjs','/':'index.html','/index.html':'index.html','/app.mjs':'app.mjs','/style.css':'style.css','/favicon.svg':'favicon.svg','/casts.png':'casts.png','/legal':'legal.html','/media/welcome.mp4':'media/welcome.mp4','/media/luna-greeting.wav':'media/luna-greeting.wav','/media/mio-greeting.wav':'media/mio-greeting.wav','/media/reina-greeting.wav':'media/reina-greeting.wav','/media/luna-expressions.png':'media/luna-expressions.png','/media/mio-expressions.png':'media/mio-expressions.png','/media/reina-expressions.png':'media/reina-expressions.png'};
+   Object.assign(assets,{'/gemini-live-client.mjs':'gemini-live-client.mjs','/live-audio.mjs':'live-audio.mjs'});
    if(/^\/media\/(luna|mio|reina)-casual-v2-(greeting|topic-(day|music|dream|memory)|order-(drink|luxury|champagne|premium))(-revision-[a-f0-9]{8})?\.wav$/.test(url.pathname))assets[url.pathname]=url.pathname.slice(1);
    for(const cast of ['luna','mio','reina']){assets['/media/'+cast+'-seated.png']='media/'+cast+'-seated.png';for(const mood of ['idle','neutral','happy','sad','angry','surprised'])assets['/media/'+cast+'-'+mood+'.mp4']='media/'+cast+'-'+mood+'.mp4';}
    for(const name of ['NotoSansJP.woff2','ZenMaruGothic-Medium.woff2'])assets['/fonts/'+name]='fonts/'+name;
@@ -266,6 +278,7 @@ export function createApp(options={}){
    res.setHeader('Content-Length',info.size);res.writeHead(200);if(req.method==='HEAD')return res.end();createReadStream(full).on('error',()=>res.destroy()).pipe(res);
   }catch(e){if(!res.headersSent)send(res,e.status||500,{error:{code:e.code||'INTERNAL',message:e.status?e.message:'処理を完了できませんでした。履歴を確認して再試行してください。'}});else res.end();}
  });
+ live.attach(server);
  let recoveryTimer,recovering=false;
  async function recover(){
   if(recovering||!stripe.configured)return;recovering=true;
@@ -279,16 +292,16 @@ export function createApp(options={}){
    }
   }finally{recovering=false;}
  }
- return {server,economy,auth,stripe,ai,voice,rewards,recover,processEvent,
+ return {server,economy,auth,stripe,ai,voice,live,rewards,recover,processEvent,
   async listen(){await new Promise((ok,fail)=>{server.once('error',fail);server.listen(port,host,ok);});if(port===0){origin=`http://${host==='::1'?'[::1]':host}:${server.address().port}`;stripe.origin=origin;}recoveryTimer=setInterval(()=>recover().catch(()=>{}),30000);recoveryTimer.unref();recover().catch(()=>{});return origin;},
-  async close(){clearInterval(recoveryTimer);await new Promise(ok=>server.close(ok));economy.close();auth.close();},
+  async close(){clearInterval(recoveryTimer);live.close();await new Promise(ok=>server.close(ok));economy.close();auth.close();},
   get origin(){return origin;}
  };
 }
 async function readBody(req,max){const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>max)deny(413,'BODY_TOO_LARGE','送信データが大きすぎます。');chunks.push(chunk);}return Buffer.concat(chunks);}
 function send(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- const app=createApp();app.listen().then(url=>console.log(`SUCCUBUS NIGHT — LOCAL TEST ONLY\n${url}\nStripe: ${app.stripe.configured?'test configured':'not configured'} / AI: ${app.ai.configured?'configured':'scripted only'}`)).catch(e=>{console.error(e.message);process.exitCode=1;});
+ const app=createApp();app.listen().then(url=>console.log(`SUCCUBUS NIGHT — LOCAL TEST ONLY\n${url}\nStripe: ${app.stripe.configured?'test configured':'not configured'} / Gemini Live: ${app.live.configured?'key configured (connection not yet verified)':'key not configured'}`)).catch(e=>{console.error(e.message);process.exitCode=1;});
  for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>app.close().then(()=>process.exit(0)));
 }
 
